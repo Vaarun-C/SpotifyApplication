@@ -1,18 +1,21 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import os
 import spotipy
 import time
 from spotipy.oauth2 import SpotifyOAuth
 from datetime import datetime
 
-client = commands.Bot(command_prefix = '>')
+intents = discord.Intents.all()
+intents.members = True
+intents.presences = True
+client = commands.Bot(command_prefix = '>', intents=intents)
 
 #Runs when bot is ready to execute commands
 @client.event
 async def on_ready():
 
-	global new_music_playlist_id, my_playlist_id, collab_playlist_id, username, sp, output_channel, not_liked_channel
+	global new_music_playlist_id, my_playlist_id, collab_playlist_id, username, sp, output_channel, not_liked_channel, people, temp_channel
 
 	#Initialize global variables
 	new_music_playlist_id = "7rkFwRu52z4pOtQbfaBJXI"
@@ -20,8 +23,12 @@ async def on_ready():
 	collab_playlist_id = "5FZviWMbPvn9o5ldwRKhf0"
 	username = "epesp2mv3gpv0dkw7y7wkk3cf"
 
+	#Users to stalk
+	people =[	client.guilds[0].get_member(730028657581490176), #Ganther
+				client.guilds[0].get_member(896052473494650940) ] #Moto
+
 	#Create a spotipy user client object and get authorization
-	sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id = os.environ['CLIENT_ID'], client_secret = os.environ['CLIENT_SECRET'], redirect_uri = os.environ['REDIRECT_URI'], scope = "playlist-modify-private playlist-read-collaborative user-library-read"))
+	#sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id = os.environ['CLIENT_ID'], client_secret = os.environ['CLIENT_SECRET'], redirect_uri = os.environ['REDIRECT_URI'], scope = "playlist-modify-private playlist-read-collaborative user-library-read"))
 
 	#Get output channel in discord
 	for text_channel in client.guilds[0].text_channels:
@@ -29,6 +36,10 @@ async def on_ready():
 			output_channel = text_channel
 		if text_channel.id == 899976005886812170:
 			not_liked_channel = text_channel
+		if text_channel.id == 904763605008920626:
+			temp_channel = text_channel
+
+	stalk.start()
 
 	print("Ready")
 
@@ -254,6 +265,11 @@ async def findSongs(ctx):
 	#Check songs to find new music to add
 	songs_to_add = await checkSongs(music)
 
+	#Get the songs from temp_channel and add them as well
+	random_music = await temp_channel.history(limit=1000).flatten()
+	for song in random_music:
+		songs_to_add["new_songs"] = songs_to_add["new_songs"].append(song.content)
+
 	#Check if no new songs are available to add and stop here if yes
 	if(len(songs_to_add.get('add_to_my_playlist')) == 0 and len(songs_to_add.get('add_to_collab')) == 0 and len(songs_to_add.get('new_songs')) == 0):
 		await output_channel.send("No new songs to add")
@@ -293,6 +309,39 @@ async def findSongs(ctx):
 	#Clear the output channel
 	time.sleep(15)
 	await output_channel.purge(limit=1000)
+
+#Check user's activity and if they are listening to Spotify start the get_song task. Repeat every hour
+@tasks.loop(hours=1)
+async def stalk():
+
+	online = []
+
+	for person in people:
+		if (str(person.status) == "offline"):
+			continue
+		
+		for activity in person.activities:
+			if(isinstance(activity, discord.activity.Spotify)):
+				online.append(person)
+
+	if((len(online) != 0) and (get_song.is_running() == False)):
+		get_song.start(online)
+
+	elif(get_song.is_running() == True):
+		get_song.stop()
+
+#Get the spotify track that the user is listening to and send the uri to temp channel to add to New Music. Repeat every 2 minutes
+@tasks.loop(minutes=2)
+async def get_song(members):
+
+	already_tracked = await temp_channel.history(limit=1).flatten()
+
+	for person in members:
+		for activity in person.activities:
+			if(isinstance(activity, discord.activity.Spotify)):
+				for song in already_tracked:
+					if(song.content != ("spotify:track:" + str(activity.track_id))):
+						await temp_channel.send("spotify:track:" + str(activity.track_id))
 		
 #Runs the bot
 client.run(os.environ['TOKEN'])
