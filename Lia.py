@@ -28,7 +28,7 @@ async def on_ready():
 				client.guilds[0].get_member(896052473494650940) ] #Moto
 
 	#Create a spotipy user client object and get authorization
-	#sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id = os.environ['CLIENT_ID'], client_secret = os.environ['CLIENT_SECRET'], redirect_uri = os.environ['REDIRECT_URI'], scope = "playlist-modify-private playlist-read-collaborative user-library-read"))
+	sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id = os.environ['CLIENT_ID'], client_secret = os.environ['CLIENT_SECRET'], redirect_uri = os.environ['REDIRECT_URI'], scope = "playlist-modify-private playlist-read-collaborative user-library-read"))
 
 	#Get output channel in discord
 	for text_channel in client.guilds[0].text_channels:
@@ -257,6 +257,11 @@ async def findSongs(ctx):
 	new_music_songs = await getNewMusicSongs()
 	liked_songs = await filterLiked(await getLikedSongs(True))
 
+	#Get the songs from temp_channel and add them as well
+	random_music = await temp_channel.history(limit=1000).flatten()
+	for song in random_music:
+		playlist_songs['collab_must_listen'] = playlist_songs['collab_must_listen'].append(song.content)
+
 	music = {'liked_songs': liked_songs,
 			 'my_playlist_songs': playlist_songs.get('must_listen'),
 			 'collab_playlist_songs': playlist_songs.get('collab_must_listen'),
@@ -264,11 +269,6 @@ async def findSongs(ctx):
 
 	#Check songs to find new music to add
 	songs_to_add = await checkSongs(music)
-
-	#Get the songs from temp_channel and add them as well
-	random_music = await temp_channel.history(limit=1000).flatten()
-	for song in random_music:
-		songs_to_add["new_songs"] = songs_to_add["new_songs"].append(song.content)
 
 	#Check if no new songs are available to add and stop here if yes
 	if(len(songs_to_add.get('add_to_my_playlist')) == 0 and len(songs_to_add.get('add_to_collab')) == 0 and len(songs_to_add.get('new_songs')) == 0):
@@ -344,4 +344,4 @@ async def get_song(members):
 						await temp_channel.send("spotify:track:" + str(activity.track_id))
 		
 #Runs the bot
-client.run(os.environ['TOKEN'])
+client.run("ODk2MDUyNDczNDk0NjUwOTQw.YWBf5Q.cKaaKCcmAo7Dh4cw_frF3LUvH2M")#os.environ['TOKEN'])
