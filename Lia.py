@@ -243,7 +243,12 @@ async def cleanPlaylist(ctx):
 			songs_to_remove.append(song)
 
 	#Remove the list of songs
-	sp.playlist_remove_all_occurrences_of_items(new_music_playlist_id, songs_to_remove)
+	i = 0
+	while(i+100 < len(songs_to_remove)):
+		sp.playlist_remove_all_occurrences_of_items(new_music_playlist_id, songs_to_remove[i:i+100]) #Send the songs to the api call 100 at a time due to limitation
+		i = i+100
+
+	sp.playlist_remove_all_occurrences_of_items(new_music_playlist_id, songs_to_remove[i:len(songs_to_remove)]) #Send the leftover tracks
 	await output_channel.send("Playlist cleaned")
 
 #Add songs to must listen and my playlist
@@ -251,6 +256,7 @@ async def cleanPlaylist(ctx):
 async def findSongs(ctx):
 
 	await output_channel.send("Connecting to Spotify")
+	stalk.stop()
 
 	#Get songs in must listen(collab) and Must Listen(mine), also get songs in New Music and Liked songs
 	playlist_songs = await getPlaylistSongs()
@@ -260,7 +266,9 @@ async def findSongs(ctx):
 	#Get the songs from temp_channel and add them as well
 	random_music = await temp_channel.history(limit=1000).flatten()
 	for song in random_music:
-		playlist_songs['collab_must_listen'] = playlist_songs['collab_must_listen'].append(song.content)
+		playlist_songs["collab_must_listen"].append(song.content)
+
+	await temp_channel.purge(limit=1000)
 
 	music = {'liked_songs': liked_songs,
 			 'my_playlist_songs': playlist_songs.get('must_listen'),
@@ -269,6 +277,7 @@ async def findSongs(ctx):
 
 	#Check songs to find new music to add
 	songs_to_add = await checkSongs(music)
+	stalk.start()
 
 	#Check if no new songs are available to add and stop here if yes
 	if(len(songs_to_add.get('add_to_my_playlist')) == 0 and len(songs_to_add.get('add_to_collab')) == 0 and len(songs_to_add.get('new_songs')) == 0):
@@ -342,6 +351,10 @@ async def get_song(members):
 				for song in already_tracked:
 					if(song.content != ("spotify:track:" + str(activity.track_id))):
 						await temp_channel.send("spotify:track:" + str(activity.track_id))
+
+@client.command()
+async def remove_not_liked(ctx):
+	await temp_channel.purge(limit=1000)
 		
 #Runs the bot
-client.run("ODk2MDUyNDczNDk0NjUwOTQw.YWBf5Q.cKaaKCcmAo7Dh4cw_frF3LUvH2M")#os.environ['TOKEN'])
+client.run(os.environ['TOKEN'])
