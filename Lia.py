@@ -28,7 +28,7 @@ async def on_ready():
 				client.guilds[0].get_member(896052473494650940) ] #Moto
 
 	#Create a spotipy user client object and get authorization
-	sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id = "2f6f33ce02d5486d9b5a816f6789184b", client_secret = "cad0f654703f4b32a8184ff829f2ee0e", redirect_uri = "http://localhost:8888/callback", scope = "playlist-modify-private playlist-read-collaborative user-library-read"))
+	sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id = os.environ['CLIENT_ID'], client_secret = os.environ['CLIENT_SECRET'], redirect_uri = os.environ['REDIRECT_URI'], scope = "playlist-modify-private playlist-read-collaborative user-library-read"))
 
 	#Get output channel in discord
 	for text_channel in client.guilds[0].text_channels:
@@ -360,4 +360,4 @@ async def remove_not_liked(ctx):
 	await output_channel.send("Done")
 		
 #Runs the bot
-client.run("ODk2MDUyNDczNDk0NjUwOTQw.YWBf5Q.mzLuyIesKbFOylNVGTLMIZWpwuw")
+client.run(os.environ['TOKEN'])
