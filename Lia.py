@@ -28,7 +28,7 @@ async def on_ready():
 				client.guilds[0].get_member(896052473494650940) ] #Moto
 
 	#Create a spotipy user client object and get authorization
-	sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id = os.environ['CLIENT_ID'], client_secret = os.environ['CLIENT_SECRET'], redirect_uri = os.environ['REDIRECT_URI'], scope = "playlist-modify-private playlist-read-collaborative user-library-read"))
+	sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id = "2f6f33ce02d5486d9b5a816f6789184b", client_secret = "cad0f654703f4b32a8184ff829f2ee0e", redirect_uri = "http://localhost:8888/callback", scope = "playlist-modify-private playlist-read-collaborative user-library-read"))
 
 	#Get output channel in discord
 	for text_channel in client.guilds[0].text_channels:
@@ -256,7 +256,7 @@ async def cleanPlaylist(ctx):
 async def findSongs(ctx):
 
 	await output_channel.send("Connecting to Spotify")
-	stalk.stop()
+	stalk.cancel()
 
 	#Get songs in must listen(collab) and Must Listen(mine), also get songs in New Music and Liked songs
 	playlist_songs = await getPlaylistSongs()
@@ -277,7 +277,9 @@ async def findSongs(ctx):
 
 	#Check songs to find new music to add
 	songs_to_add = await checkSongs(music)
-	stalk.start()
+
+	if not stalk.is_running():
+		stalk.start()
 
 	#Check if no new songs are available to add and stop here if yes
 	if(len(songs_to_add.get('add_to_my_playlist')) == 0 and len(songs_to_add.get('add_to_collab')) == 0 and len(songs_to_add.get('new_songs')) == 0):
@@ -354,7 +356,8 @@ async def get_song(members):
 
 @client.command()
 async def remove_not_liked(ctx):
-	await temp_channel.purge(limit=1000)
+	await not_liked_channel.purge(limit=1000)
+	await output_channel.send("Done")
 		
 #Runs the bot
-client.run(os.environ['TOKEN'])
+client.run("ODk2MDUyNDczNDk0NjUwOTQw.YWBf5Q.mzLuyIesKbFOylNVGTLMIZWpwuw")
