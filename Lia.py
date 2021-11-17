@@ -39,7 +39,8 @@ async def on_ready():
 		if text_channel.id == 904763605008920626:
 			temp_channel = text_channel
 
-	stalk.start()
+	if(stalk.is_running() == False):
+		stalk.start()
 
 	print("Ready")
 
@@ -266,9 +267,12 @@ async def findSongs(ctx):
 	#Get the songs from temp_channel and add them as well
 	random_music = await temp_channel.history(limit=1000).flatten()
 	for song in random_music:
+		if(song.content == "placeholder_id"):
+			continue
 		playlist_songs["collab_must_listen"].append(song.content)
 
 	await temp_channel.purge(limit=1000)
+	await temp_channel.send("placeholder_id")
 
 	music = {'liked_songs': liked_songs,
 			 'my_playlist_songs': playlist_songs.get('must_listen'),
@@ -338,7 +342,7 @@ async def stalk():
 	if((len(online) != 0) and (get_song.is_running() == False)):
 		get_song.start(online)
 
-	elif(get_song.is_running() == True):
+	elif((len(online) == 0) and (get_song.is_running() == True)):
 		get_song.stop()
 
 #Get the spotify track that the user is listening to and send the uri to temp channel to add to New Music. Repeat every 2 minutes
