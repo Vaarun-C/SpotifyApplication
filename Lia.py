@@ -78,7 +78,7 @@ async def findSongs(ctx):
 		for song in stalk_music:
 			playlist_songs["collab_must_listen"].append(song.content)
 
-		await stalk_channel.purge(limit=1000)
+		await client.stalk_channel.purge(limit=1000)
 
 	music = {
 		'liked_songs': liked_songs,
