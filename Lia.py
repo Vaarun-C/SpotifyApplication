@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 from discord_slash import SlashCommand, SlashContext
-from discord_slash.utils.manage_commands import create_option
 
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -102,29 +101,26 @@ async def findSongs(ctx):
 
 	#Add songs to my personal playlist
 	if (len(songs_to_add.get('add_to_my_playlist')) != 0):
-
-		i = 0
-		while(i+100 < len(songs_to_add.get('add_to_my_playlist'))):
-			client.sp.playlist_add_items(client.my_playlist_id, songs_to_add.get('add_to_my_playlist')[i:i+100]) #Send the songs to the api call 100 at a time due to limitation
-			i = i+100
-
-		client.sp.playlist_add_items(client.my_playlist_id, songs_to_add.get('add_to_my_playlist')[i:len(songs_to_add.get('add_to_my_playlist'))]) #Send the leftover tracks
+		add_songs(client.my_playlist_id, songs_to_add.get("add_to_my_playlist"))
 
 	#Add new songs to my New Songs playlist
-	if (len(songs_to_add.get('new_songs')) != 0):
-		
-		j = 0
-		while(j+100 < len(songs_to_add.get('new_songs'))):
-			client.sp.playlist_add_items(client.new_music_playlist_id, songs_to_add.get('new_songs')[j:j+100]) #Send the songs to the api call 100 at a time due to limitation
-			j = j+100
-
-		client.sp.playlist_add_items(client.new_music_playlist_id, songs_to_add.get('new_songs')[j:len(songs_to_add.get('new_songs'))]) #Send the leftover tracks
+	if (len(songs_to_add.get('new_songs')) != 0):		
+		add_songs(client.new_music_playlist_id, songs_to_add.get("new_songs"))
 
 	await ctx.send('Done')
 
 	#Clear the output channel
 	time.sleep(15)
 	await client.output_channel.purge(limit=1000)
+
+#Add songs to a playlist
+async def add_songs(playlist_id, songs):
+
+	i = 0
+	while(i+100 < len(songs)):
+		client.sp.playlist_add_items(playlist_id, songs[i:i+100])
+		i += 100
+	client.sp.playlist_add_items(playlist_id, songs[i:len(songs)])
 
 #Load all cogs in cogs folder
 for filename in os.listdir("./cogs"):

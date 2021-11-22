@@ -14,8 +14,8 @@ class get_songs():
 			track_objects = sp.next(track_objects)
 			tracks.extend(track_objects['items'])
 
+		#Consider only the 50 newest tracks
 		if(limit):
-			#Consider only the 50 newest tracks
 			tracks = tracks[:51]
 	
 		for song in tracks:
