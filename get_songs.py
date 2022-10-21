@@ -8,6 +8,7 @@ class get_songs():
 		#Get user liked songs playlist and get each track as an object
 		track_objects = sp.current_user_saved_tracks()
 		tracks = track_objects['items']
+		hello
 	
 		#This is the workaraound for the 100 track get limit. It stores all the tracks in playlist as objects instead of just first 100
 		while track_objects['next']:
